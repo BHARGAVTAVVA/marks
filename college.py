@@ -98,7 +98,7 @@ def main():
             st.markdown(message["content"])
 
     # Specify the PDF file paths
-    pdf_file_paths = ["C:/Users/rishi/Desktop/Swathi/RCEE.pdf"]  # Use forward slashes
+    pdf_file_paths = ["RCEE.pdf"]  # Use forward slashes
 
     # Process the specified PDF files
     raw_text = get_pdf_text(pdf_file_paths)
