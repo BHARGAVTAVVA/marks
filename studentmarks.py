@@ -34,9 +34,11 @@ safety_settings = [
     },
 ]
 
-model = genai.GenerativeModel(model_name="gemini-1.5-pro-latest",
-                              generation_config=generation_config,
-                              safety_settings=safety_settings)
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-pro-latest",
+    generation_config=generation_config,
+    safety_settings=safety_settings
+)
 
 def extract_csv(pathname: str) -> list[str]:
     parts = [f"---- START OF CSV {pathname} ---"]
@@ -49,13 +51,17 @@ def extract_csv(pathname: str) -> list[str]:
 # Set fixed paths for CSV files
 csv_path_1 = r"C:\Users\rishi\Desktop\Vijaya\31sem.csv"
 csv_path_2 = r"C:\Users\rishi\Desktop\Vijaya\32sem.csv"
+csv_path_3 = r"C:\Users\rishi\Desktop\Vijaya\33sem.csv"
+csv_path_4 = r"C:\Users\rishi\Desktop\Vijaya\34sem.csv"
 
-# Extract data from both CSV files using fixed paths
+# Extract data from all four CSV files
 csv_data_1 = extract_csv(csv_path_1)
 csv_data_2 = extract_csv(csv_path_2)
+csv_data_3 = extract_csv(csv_path_3)
+csv_data_4 = extract_csv(csv_path_4)
 
-# Combine the extracted data for the chat context
-combined_data = csv_data_1 + csv_data_2
+# Combine all extracted data into a single list for the chat context
+combined_data = csv_data_1 + csv_data_2 + csv_data_3 + csv_data_4
 
 # Streamlit app UI
 st.title("Student Results Chatbot")
