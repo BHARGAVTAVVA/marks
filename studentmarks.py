@@ -49,10 +49,10 @@ def extract_csv(pathname: str) -> list[str]:
     return parts
 
 # Set fixed paths for CSV files
-csv_path_1 = r"31sem.csv"
-csv_path_2 = r"32sem.csv"
-csv_path_3 = r"11marks.csv"
-csv_path_4 = r"12marks.csv"
+csv_path_1 = r"1-1sem.csv"
+csv_path_2 = r"1-2sem.csv"
+csv_path_3 = r"3-1sem.csv"
+csv_path_4 = r"3-2sem.csv"
 
 # Extract data from all four CSV files
 csv_data_1 = extract_csv(csv_path_1)
