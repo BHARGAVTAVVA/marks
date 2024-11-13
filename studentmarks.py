@@ -1,5 +1,6 @@
 import os
 import streamlit as st
+import re
 from PyPDF2 import PdfReader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
@@ -88,12 +89,24 @@ def extract_csv(pathname: str) -> list[str]:
             parts.append(" ".join(row))  # Join the row into a single string
     return parts
 
+# Function to validate roll number format and existence in data
+def is_valid_roll_number(roll_number: str, combined_data: list) -> bool:
+    # Regex pattern for valid roll numbers (format like 20ME1A5403 or 21ME...)
+    pattern = r'^(20|21)[A-Z]{2}[0-9]{1}[A-Z]{1}[0-9]{4}$'  
+   
+    # Check if roll number matches pattern and exists in combined data
+    if re.match(pattern, roll_number):
+        return any(roll_number in entry for entry in combined_data)
+    
+    return False
+
 # Streamlit app UI setup
 def main():
     st.set_page_config(page_title="🎓 College & Student Marks Chatbot", layout="wide")
     
     # Sidebar navigation options
     st.sidebar.title("Navigation Bar")
+    
     app_mode = st.sidebar.selectbox("Choose an option:", ["College Info", "Student Marks"])
 
     if app_mode == "College Info":
@@ -106,7 +119,7 @@ def main():
             st.session_state.input = ""  # Initialize input session state
 
         # Specify the PDF file paths for college information
-        pdf_file_paths = ["RCEE.pdf"]  # Use forward slashes
+        pdf_file_paths = ["C:/Users/rishi/Desktop/Swathi/RCEE.pdf"]  # Use forward slashes
 
         # Process the specified PDF files once when the app starts
         raw_text = get_pdf_text(pdf_file_paths)
@@ -160,67 +173,178 @@ def main():
             st.session_state.messages.append({"role": "assistant", "content": response})
 
     elif app_mode == "Student Marks":
-        st.title("Student Results Chatbot")
+        st.title("Student Batch Wise Results Analysis")
 
-        # Set fixed paths for CSV files for student marks analysis
-        csv_paths = [
-            r"1-1sem.csv",
-            r"1-2sem.csv",
-            r"3-1sem.csv",
-            r"3-2sem.csv"
-        ]
+        # Dropdown menu for selecting specific batch under Student Marks section 
+        batch_selection = st.sidebar.selectbox(
+            'Select Batch:',
+            ['Select Batch', 'AI & DS 2021-2025', 'AI & DS 2020-2024']
+        )
 
-        # Extract data from all specified CSV files for student marks analysis
-        combined_data = []
-        for path in csv_paths:
-            combined_data.extend(extract_csv(path))
+        if batch_selection == 'AI & DS 2021-2025':
+            st.subheader(f"{batch_selection} Student Marks Chatbot")
 
-        # User input for questions about student results
-        user_question = st.text_input("Ask a question about student results:")
-        
-        if st.button("🚀 Submit"):
-            if user_question:
-                model = genai.GenerativeModel(
-                    model_name="gemini-1.5-pro-latest",
-                    generation_config={
-                        "temperature": 1,
-                        "top_p": 0.95,
-                        "top_k": 0,
-                        "max_output_tokens": 8192,
-                    },
-                    safety_settings=[
-                        {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-                        {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-                        {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-                        {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-                    ]
-                )
+            # Set fixed paths for CSV files specific to AI & DS 2021-2025 batch 
+            csv_paths_ai_ds_2021_2025 = [
+                r"1-1sem.csv",
+                r"1-2sem.csv",
+                r"2-1sem.csv",
+                r"2-2sem.csv",
+                r"3-1sem.csv",
+                r"3-2sem.csv"
+            ]
 
-                # Prepare messages history including user's question and previous context (if any)
-                messages_history = [{'role': 'user', 'parts': combined_data}]
-                messages_history.append({'role': 'user', 'parts': [user_question]})
+            # Extract data from all specified CSV files for student marks analysis
+            combined_data_2021_2025 = []
+            for path in csv_paths_ai_ds_2021_2025:
+                combined_data_2021_2025.extend(extract_csv(path))
 
-                response = model.generate_content(messages_history)  # Use generate_content instead of send_message
-                
-                if hasattr(response, 'candidates') and response.candidates:  # Check if there are candidates returned by the model
-                    
-                    candidate_output = response.candidates[0]
-                    
-                    # Extracting just the content text from candidate_output.
-                    output_text_parts = candidate_output.content.parts
-                    
-                    # Constructing a clean output string.
-                    output_text_lines = [part.text for part in output_text_parts]
-                    output_text_cleaned = "\n".join(output_text_lines).strip()  # Join parts into a single string
-                    
-                    # Display cleaned output without additional metadata or formatting issues.
-                    st.write(output_text_cleaned)  # Display response from student marks analysis bot
+            # User input for questions about student results including roll number validation 
+            user_question_with_roll_number= st.text_input("Ask a question about student results (include your Roll Number):")
+            
+            if st.button("🚀 Submit"):
+                if user_question_with_roll_number:
+                    # Extract roll number from user question using regex (assuming format like 20ME1A5403 or similar)
+                    roll_number_match = re.search(r'\b(20|21)[A-Z]{2}[0-9]{1}[A-Z]{1}[0-9]{4}\b', user_question_with_roll_number)
+
+                    if roll_number_match:
+                        roll_number_input= roll_number_match.group(0)  # Extracted roll number
+
+                        if is_valid_roll_number(roll_number_input, combined_data_2021_2025):
+                            model_2021_25= genai.GenerativeModel(
+                                model_name="gemini-1.5-pro-latest",
+                                generation_config={
+                                    "temperature": 1,
+                                    "top_p": 0.95,
+                                    "top_k": 0,
+                                    "max_output_tokens": 8192,
+                                },
+                                safety_settings=[
+                                    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+                                    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+                                    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+                                    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+                                ]
+                            )
+
+                            messages_history_2021_25= [{'role': 'user', 'parts': combined_data_2021_2025}]
+                            messages_history_2021_25.append({'role': 'user', 'parts': [user_question_with_roll_number]})
+
+                            response_2021_25= model_2021_25.generate_content(messages_history_2021_25)  
+                            
+                            if hasattr(response_2021_25, 'candidates') and response_2021_25.candidates:  
+
+                                candidate_output= response_2021_25.candidates[0]
+                                
+                                output_text_parts= candidate_output.content.parts
+
+                                output_text_lines= [part.text for part in output_text_parts]
+                                output_text_cleaned= "\n".join(output_text_lines).strip()  
+                                
+                                st.write(output_text_cleaned)  
+                            
+                            else:
+                                st.warning("No response was generated. Please try again.")
+                        
+                        else:
+                            st.error(
+                                """Sorry, the roll number you entered is incorrect. 
+                                Please double-check and re-enter it carefully. 
+                                It seems like you might have entered it quickly, 
+                                so take a moment to ensure it's accurate. 
+                                Once we have the correct roll number, I’ll be able to assist you better!"""
+                            )
+                    else:
+                        st.error(
+                            """It looks like you forgot to include your roll number in your question.
+                            Please make sure to mention it so I can assist you better! 
+                            For example: “Can you provide a summary of results for 20ME1A5420?”"""
+                        )
                 
                 else:
-                    st.warning("No response was generated. Please try again.")
+                    st.warning("Please enter a question before submitting.")
+
+        elif batch_selection == 'AI & DS 2020-2024':
+            st.subheader(f"{batch_selection} Student Marks Chatbot")
+
+            # Set fixed paths for CSV files specific to AI & DS 2020-2024 batch 
+            csv_paths_ai_ds_2020_2024 = [
+                r"1-1sems.csv",
+                r"1-2sems.csv",
+                r"2-1sems.csv",
+                r"2-2sems.csv",
+                r"3-1sems.csv",
+                r"3-2sems.csv"
+            ]
+
+            # Extract data from all specified CSV files for student marks analysis
+            combined_data_2020_24 = []
+            for path in csv_paths_ai_ds_2020_2024:
+                combined_data_2020_24.extend(extract_csv(path))
+
+            # User input for questions about student results specific to this batch 
+            user_question_with_roll_number_to24= st.text_input("Ask a question about student results (include your Roll Number):")
+            
+            if st.button("🚀 Submit"):
+                if user_question_with_roll_number_to24:
+                    roll_number_match_to24= re.search(r'\b(20|21)[A-Z]{2}[0-9]{1}[A-Z]{1}[0-9]{4}\b', user_question_with_roll_number_to24)
+
+                    if roll_number_match_to24:
+                        roll_number_input_to24= roll_number_match_to24.group(0)  
+
+                        if is_valid_roll_number(roll_number_input_to24, combined_data_2020_24):
+                            model_to24= genai.GenerativeModel(
+                                model_name="gemini-1.5-pro-latest",
+                                generation_config={
+                                    "temperature": 1,
+                                    "top_p": 0.95,
+                                    "top_k": 0,
+                                    "max_output_tokens": 8192,
+                                },
+                                safety_settings=[
+                                    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+                                    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+                                    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+                                    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+                                ]
+                            )
+
+                            messages_history_to24= [{'role': 'user', 'parts': combined_data_2020_24}]
+                            messages_history_to24.append({'role': 'user', 'parts': [user_question_with_roll_number_to24]})
+
+                            response_to24= model_to24.generate_content(messages_history_to24)  
+                            
+                            if hasattr(response_to24, 'candidates') and response_to24.candidates:  
+
+                                candidate_output_to24= response_to24.candidates[0]
+                                
+                                output_text_parts_to24= candidate_output_to24.content.parts
+
+                                output_text_lines_to24= [part.text for part in output_text_parts_to24]
+                                output_text_cleaned_to24= "\n".join(output_text_lines_to24).strip()  
+                                
+                                st.write(output_text_cleaned_to24)  
+                            
+                            else:
+                                st.warning("No response was generated. Please try again.")
+                        
+                        else:
+                            st.error(
+                                """Sorry, the roll number you entered is incorrect. 
+                                Please double-check and re-enter it carefully. 
+                                It seems like you might have entered it quickly, 
+                                so take a moment to ensure it's accurate. 
+                                Once we have the correct roll number, I’ll be able to assist you better!"""
+                            )
+                    else:
+                        st.error(
+                            """It looks like you forgot to include your roll number in your question.
+                            Please make sure to mention it so I can assist you better! 
+                            For example: “Can you provide a summary of results for 20ME1A5420?”"""
+                        )
                 
-            else:
-                st.warning("Please enter a question before submitting.")
+                else:
+                    st.warning("Please enter a question before submitting.")
 
 # Run the app
 if __name__ == "__main__":
