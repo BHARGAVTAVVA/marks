@@ -119,7 +119,7 @@ def main():
             st.session_state.input = ""  # Initialize input session state
 
         # Specify the PDF file paths for college information
-        pdf_file_paths = ["C:/Users/rishi/Desktop/Swathi/RCEE.pdf"]  # Use forward slashes
+        pdf_file_paths = ["RCEE.pdf"]  # Use forward slashes
 
         # Process the specified PDF files once when the app starts
         raw_text = get_pdf_text(pdf_file_paths)
