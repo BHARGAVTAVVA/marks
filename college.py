@@ -245,7 +245,8 @@ def main():
                 r"2-1": r"2-1sems.csv",
                 r"2-2": r"2-2sems.csv",
                 r"3-1": r"3-1sems.csv",
-                r"3-2": r"3-2sems.csv"
+                r"3-2": r"3-2sems.csv",
+                r"4-2": r"4-2sems.csv
             }
 
             combined_data_2020_24 = []
