@@ -108,7 +108,7 @@ def main():
             st.session_state.input = ""
         
         # Specify the PDF file paths for college information
-        pdf_file_paths = ["C:/Users/rishi/Desktop/Swathi/RCEE.pdf"]
+        pdf_file_paths = ["RCEE.pdf"]
         
         # Process the specified PDF files once when the app starts
         raw_text = get_pdf_text(pdf_file_paths)
