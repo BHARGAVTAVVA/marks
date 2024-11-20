@@ -1,4 +1,6 @@
-
+folium
+pandas
+streamlit-folium
 langchain-community
 numpy
 pandas
