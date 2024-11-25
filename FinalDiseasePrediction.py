@@ -9,10 +9,7 @@ genai.configure(api_key=GOOGLE_API_KEY)
 
 # Streamlit Application
 def main():
-    st.title("Early Disease Prediction")
-
-    # User Input for Disease Prediction
-    st.header("Early Disease Prediction")
+    st.title("Enhancing Medical Assistance: A BERT powered Chatbot")
 
     # User Input
     symptoms = st.text_input("Enter your symptoms (e.g., headache, fever, fatigue):")
